@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>login varuna bot</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body, html {
+      height: 100%;
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: url('vikrant.jpg') no-repeat center center fixed;
+      background-size: cover;
+      overflow: hidden;
+    }
+
+    /* Simple dark overlay */
+    .overlay {
+      background-color: rgba(0, 0, 0, 0.4);
+      height: 100%;
+      width: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    .login-container {
+      position: relative;
+      z-index: 2;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .login-box {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      padding: 50px 40px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      color: #fff;
+      animation: slideInUp 1s ease-out;
+    }
+
+    @keyframes slideInUp {
+      0% {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .login-box h2 {
+      margin-bottom: 30px;
+      font-size: 32px;
+      font-weight: 300;
+      color: #00d1ff;
+      text-align: center;
+      letter-spacing: 2px;
+    }
+
+    .input-group {
+      position: relative;
+      margin: 25px 0;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 15px 20px;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      font-size: 16px;
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      outline: none;
+      backdrop-filter: blur(10px);
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus {
+      border-color: #00d1ff;
+      background: rgba(255, 255, 255, 0.1);
+      box-shadow: 
+        0 0 20px rgba(0, 209, 255, 0.3),
+        0 0 0 3px rgba(0, 209, 255, 0.1);
+      transform: translateY(-2px);
+    }
+
+    input::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+      transition: color 0.3s ease;
+    }
+
+    input:focus::placeholder {
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #00b7ff 0%, #0080cc 100%);
+      border: none;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: 600;
+      color: white;
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 20px;
+      box-shadow: 0 10px 30px rgba(0, 183, 255, 0.3);
+    }
+
+    .login-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.6s ease;
+    }
+
+    .login-btn:hover {
+      background: linear-gradient(135deg, #00d1ff 0%, #0099e6 100%);
+      transform: translateY(-3px);
+      box-shadow: 0 15px 40px rgba(0, 183, 255, 0.4);
+    }
+
+    .login-btn:hover::before {
+      left: 100%;
+    }
+
+    .login-btn:active {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(0, 183, 255, 0.3);
+    }
+
+    .links {
+      text-align: center;
+      margin-top: 25px;
+      font-size: 14px;
+    }
+
+    .links p {
+      margin: 8px 0;
+    }
+
+    .links a {
+      color: #00cfff;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .links a::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 2px;
+      bottom: -2px;
+      left: 50%;
+      background: #00cfff;
+      transition: all 0.3s ease;
+      transform: translateX(-50%);
+    }
+
+    .links a:hover {
+      color: #ffffff;
+      text-shadow: 0 0 10px rgba(0, 207, 255, 0.5);
+    }
+
+    .links a:hover::after {
+      width: 100%;
+    }
+
+    .logo {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      height: 60px;
+      z-index: 3;
+      filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+    }
+
+    /* Security indicator */
+
+    /* Loading animation for form submission */
+    .login-btn.loading {
+      pointer-events: none;
+      background: linear-gradient(135deg, #666 0%, #999 100%);
+    }
+
+    .login-btn.loading::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 20px;
+      height: 20px;
+      margin: -10px 0 0 -10px;
+      border: 2px solid transparent;
+      border-top: 2px solid #fff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Responsive design */
+    @media (max-width: 500px) {
+      .login-box {
+        padding: 40px 25px;
+        margin: 20px;
+      }
+      
+      .login-box h2 {
+        font-size: 28px;
+      }
+      
+      .logo {
+        height: 50px;
+        top: 15px;
+        left: 15px;
+      }
+    }
+
+    @media (max-height: 600px) {
+      .login-box {
+        padding: 30px 40px;
+      }
+      
+      .login-box h2 {
+        margin-bottom: 20px;
+        font-size: 28px;
+      }
+      
+      .input-group {
+        margin: 20px 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay"></div>
+  
+  <!-- Logo -->
+  <img src="logo.png" alt="Naval Command Logo" class="logo">
+
+  <div class="login-container">
+    <div class="login-box">
+      <h2>VARUNA BOT </h2>
+      <h4>Login</h4>
+      <form method="POST" action="/login" id="loginForm">
+        <div class="input-group">
+          <input type="text" name="username" placeholder="Username" required autocomplete="username">
+        </div>
+        <div class="input-group">
+          <input type="password" name="password" placeholder="Password" required autocomplete="current-password">
+        </div>
+        <button class="login-btn" type="submit" id="loginButton">
+          Access Portal
+        </button>
+      </form>
+      <div class="links">
+        <p><a href="/forgot">Forgot Password?</a></p>
+        <p>Don't have a account? <a href="/register">Register</a></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Enhanced form handling with loading animation
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      const button = document.getElementById('loginButton');
+      button.classList.add('loading');
+      button.textContent = '';
+      
+      // Remove loading state after 3 seconds (for demo purposes)
+      setTimeout(() => {
+        button.classList.remove('loading');
+        button.textContent = 'Access Portal';
+      }, 3000);
+    });
+
+    // Add focus animations
+    const inputs = document.querySelectorAll('input');
+    inputs.forEach(input => {
+      input.addEventListener('focus', function() {
+        this.parentElement.style.transform = 'scale(1.02)';
+      });
+      
+      input.addEventListener('blur', function() {
+        this.parentElement.style.transform = 'scale(1)';
+      });
+    });
+
+    // Keyboard accessibility
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && document.activeElement.tagName !== 'BUTTON') {
+        document.getElementById('loginButton').click();
+      }
+    });
+  </script>
+</body>
+</html>

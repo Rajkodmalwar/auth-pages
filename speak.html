@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline Voice Chatbot</title>
+    <!-- Using a CDN for the icon, but it will gracefully fail offline. You could download it. -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .chat-widget {
+            width: 400px;
+            height: 600px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            background-color: #fff;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .chat-header {
+            background-color: #0084ff;
+            color: white;
+            padding: 15px;
+            font-size: 1.2em;
+            font-weight: bold;
+            text-align: center;
+        }
+        .chat-container {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .message {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            max-width: 80%;
+        }
+        .message-content {
+            padding: 10px 15px;
+            border-radius: 18px;
+            position: relative;
+        }
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+        .message.bot .message-content {
+            background-color: #e4e6eb;
+            color: #050505;
+            border-bottom-left-radius: 4px;
+        }
+        .message.user .message-content {
+            background-color: #0084ff;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        .speak-btn {
+            background: none;
+            border: none;
+            color: #65676b;
+            cursor: pointer;
+            font-size: 1.1em;
+            padding: 5px;
+        }
+        .message.user .speak-btn {
+            color: #a5d2ff; /* Lighter color on the user's blue bubble */
+        }
+        .chat-input {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+        }
+        #userInput {
+            flex-grow: 1;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            padding: 10px 15px;
+            font-size: 1em;
+            outline: none;
+        }
+        #sendBtn {
+            background-color: #0084ff;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            margin-left: 10px;
+            cursor: pointer;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+
+<div class="chat-widget">
+    <div class="chat-header">Offline AI Assistant</div>
+    <div class="chat-container" id="chatContainer">
+        <!-- Messages will be appended here -->
+    </div>
+    <div class="chat-input">
+        <input type="text" id="userInput" placeholder="Type a message...">
+        <button id="sendBtn"><i class="fa-solid fa-paper-plane"></i></button>
+    </div>
+</div>
+
+<script>
+    const chatContainer = document.getElementById('chatContainer');
+    const userInput = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+
+    // --- Core Speech Synthesis Function ---
+    function speakText(text) {
+        // 1. Check if the browser supports the SpeechSynthesis API
+        if ('speechSynthesis' in window) {
+            // 2. Stop any speech that is currently active
+            window.speechSynthesis.cancel();
+            
+            // 3. Create a new utterance object
+            const utterance = new SpeechSynthesisUtterance(text);
+
+            // 4. (Optional) Configure the utterance
+            utterance.lang = 'en-US'; // Set language
+            utterance.rate = 1.0;     // Set speed (0.1 to 10)
+            utterance.pitch = 1.0;    // Set pitch (0 to 2)
+
+            // 5. Speak the text
+            window.speechSynthesis.speak(utterance);
+
+            utterance.onerror = (event) => {
+                console.error("SpeechSynthesisUtterance.onerror", event);
+                alert('An error occurred during speech synthesis. Your browser might not have offline voices installed.');
+            };
+
+        } else {
+            alert('Sorry, your browser does not support text-to-speech.');
+        }
+    }
+
+    function addMessage(text, sender) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${sender}`;
+
+        const messageContent = document.createElement('div');
+        messageContent.className = 'message-content';
+        messageContent.textContent = text;
+        
+        // Create the speaker button
+        const speakButton = document.createElement('button');
+        speakButton.className = 'speak-btn';
+        speakButton.innerHTML = '<i class="fa-solid fa-volume-high"></i>';
+        
+        // Add the click event to speak the text
+        speakButton.onclick = () => {
+            speakText(text);
+        };
+        
+        // Append elements
+        messageDiv.appendChild(messageContent);
+        messageDiv.appendChild(speakButton);
+        chatContainer.appendChild(messageDiv);
+
+        // Scroll to the bottom
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    function handleUserInput() {
+        const text = userInput.value.trim();
+        if (text === '') return;
+
+        // Add user's message
+        addMessage(text, 'user');
+        userInput.value = '';
+
+        // Simulate bot response after a short delay
+        setTimeout(() => {
+            const botResponse = getBotResponse(text);
+            addMessage(botResponse, 'bot');
+        }, 500);
+    }
+
+    function getBotResponse(userText) {
+        userText = userText.toLowerCase();
+        if (userText.includes('hello') || userText.includes('hi')) {
+            return "Hello there! How can I help you today?";
+        } else if (userText.includes('how are you')) {
+            return "I'm just a script, but I'm running perfectly! Thanks for asking.";
+        } else if (userText.includes('voice') || userText.includes('speak')) {
+            return "Yes, I can speak. Just click the speaker icon next to my message.";
+        } else {
+            return "I am a simple offline bot. I can only respond to a few phrases.";
+        }
+    }
+
+    // Event Listeners
+    sendBtn.addEventListener('click', handleUserInput);
+    userInput.addEventListener('keypress', (event) => {
+        if (event.key === 'Enter') {
+            handleUserInput();
+        }
+    });
+
+    // Initial bot message
+    window.onload = () => {
+        addMessage("Hi! I'm an offline chatbot. Try asking me something like 'hello' or 'how are you'. Click the speaker icon to hear me speak!", 'bot');
+    };
+
+</script>
+</body>
+</html>

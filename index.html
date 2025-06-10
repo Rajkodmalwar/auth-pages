@@ -1,0 +1,26 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chatbot</title>
+</head>
+<body>
+    <h2>Welcome, {{ username }}!</h2>
+    <!-- Your chatbot UI here -->
+    <div id="chatbot">
+        <textarea id="chat-output" readonly></textarea><br>
+        <input type="text" id="chat-input" placeholder="Type your message..."><br>
+        <button onclick="sendMessage()">Send</button>
+    </div>
+    <p><a href="{{ url_for('logout') }}">Logout</a></p>
+    <script>
+        // Basic chatbot placeholder script
+        function sendMessage() {
+            const input = document.getElementById('chat-input').value;
+            const output = document.getElementById('chat-output');
+            output.value += `You: ${input}\nBot: This is a placeholder response.\n`;
+            document.getElementById('chat-input').value = '';
+        }
+    </script>
+</body>
+</html>

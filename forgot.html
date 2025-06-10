@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forgot Password</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: url('vikrant.jpg') no-repeat center center fixed;
+            background-size: cover;
+            overflow: hidden;
+        }
+
+        /* Simple dark overlay */
+        .overlay {
+            background-color: rgba(0, 0, 0, 0.4);
+            height: 100%;
+            width: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .forgot-container {
+            position: relative;
+            z-index: 2;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .forgot-box {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 50px 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            color: #fff;
+            animation: slideInUp 1s ease-out;
+        }
+
+        @keyframes slideInUp {
+            0% {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .forgot-box h2 {
+            margin-bottom: 30px;
+            font-size: 32px;
+            font-weight: 300;
+            color: #00d1ff;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+
+        .input-group {
+            position: relative;
+            margin: 25px 0;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+        }
+
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            outline: none;
+            backdrop-filter: blur(10px);
+        }
+
+        input[type="email"]:focus,
+        input[type="password"]:focus {
+            border-color: #00d1ff;
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 
+                0 0 20px rgba(0, 209, 255, 0.3),
+                0 0 0 3px rgba(0, 209, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+            transition: color 0.3s ease;
+        }
+
+        input:focus::placeholder {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+
+        .checkbox-container input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+            accent-color: #00d1ff;
+        }
+
+        .checkbox-container label {
+            color: rgba(255, 255, 255, 0.9);
+            margin: 0;
+            cursor: pointer;
+        }
+
+        .forgot-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #00b7ff 0%, #0080cc 100%);
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 20px;
+            box-shadow: 0 10px 30px rgba(0, 183, 255, 0.3);
+        }
+
+        .forgot-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .forgot-btn:hover {
+            background: linear-gradient(135deg, #00d1ff 0%, #0099e6 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0, 183, 255, 0.4);
+        }
+
+        .forgot-btn:hover::before {
+            left: 100%;
+        }
+
+        .forgot-btn:active {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(0, 183, 255, 0.3);
+        }
+
+        .links {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 14px;
+        }
+
+        .links p {
+            margin: 8px 0;
+        }
+
+        .links a {
+            color: #00cfff;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .links a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -2px;
+            left: 50%;
+            background: #00cfff;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+
+        .links a:hover {
+            color: #ffffff;
+            text-shadow: 0 0 10px rgba(0, 207, 255, 0.5);
+        }
+
+        .links a:hover::after {
+            width: 100%;
+        }
+
+        .logo {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            height: 60px;
+            z-index: 3;
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+        }
+
+        /* Error and success messages */
+        .error, .message {
+            text-align: center;
+            padding: 12px 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 500;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+            animation: slideInUp 0.5s ease-out;
+        }
+
+        .error {
+            background: rgba(255, 82, 82, 0.9);
+            color: white;
+            border: 1px solid rgba(255, 82, 82, 0.3);
+            box-shadow: 0 4px 15px rgba(255, 82, 82, 0.2);
+        }
+
+        .message {
+            background: rgba(76, 175, 80, 0.9);
+            color: white;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.2);
+        }
+
+        /* Loading animation for form submission */
+        .forgot-btn.loading {
+            pointer-events: none;
+            background: linear-gradient(135deg, #666 0%, #999 100%);
+        }
+
+        .forgot-btn.loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid transparent;
+            border-top: 2px solid #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive design */
+        @media (max-width: 500px) {
+            .forgot-box {
+                padding: 40px 25px;
+                margin: 20px;
+            }
+            
+            .forgot-box h2 {
+                font-size: 28px;
+            }
+            
+            .logo {
+                height: 50px;
+                top: 15px;
+                left: 15px;
+            }
+        }
+
+        @media (max-height: 600px) {
+            .forgot-box {
+                padding: 30px 40px;
+            }
+            
+            .forgot-box h2 {
+                margin-bottom: 20px;
+                font-size: 28px;
+            }
+            
+            .input-group {
+                margin: 20px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay"></div>
+    <img src="naval-logo.png" alt="Naval Command Logo" class="logo">
+    
+    <div class="forgot-container">
+        <div class="forgot-box">
+            <h2>Reset Password</h2>
+            
+            {% if error %}
+                <div class="error">{{ error }}</div>
+            {% endif %}
+            {% if message %}
+                <div class="message">{{ message }}</div>
+            {% endif %}
+            
+            <form method="POST" action="{{ url_for('forgot') }}">
+                <div class="input-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" placeholder="Enter your email" required>
+                </div>
+                
+                <div class="input-group">
+                    <label for="password">New Password</label>
+                    <input type="password" id="password" name="password" placeholder="Enter new password" required>
+                </div>
+                
+                <div class="input-group">
+                    <label for="confirm_password">Confirm Password</label>
+                    <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm new password" required>
+                </div>
+                
+                <div class="checkbox-container">
+                    <input type="checkbox" id="showPassword" onclick="togglePassword()">
+                    <label for="showPassword">Show passwords</label>
+                </div>
+                
+                <button type="submit" class="forgot-btn">Reset Password</button>
+            </form>
+            
+            <div class="links">
+                <p><a href="{{ url_for('login') }}">← Back to Login</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function togglePassword() {
+            const show = document.getElementById('showPassword').checked;
+            ['password', 'confirm_password'].forEach(id => {
+                const field = document.getElementById(id);
+                if (field) field.type = show ? 'text' : 'password';
+            });
+        }
+
+        // Client-side password validation
+        document.querySelector('form').addEventListener('submit', function (e) {
+            const pwd = document.getElementById('password').value;
+            const confirm = document.getElementById('confirm_password').value;
+            const button = document.querySelector('.forgot-btn');
+
+            // Remove existing error messages
+            const existingError = document.querySelector('.error:not([data-server])');
+            if (existingError) existingError.remove();
+
+            if (pwd !== confirm) {
+                e.preventDefault();
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error';
+                errorDiv.textContent = 'Passwords do not match.';
+                this.insertBefore(errorDiv, this.firstChild);
+                return;
+            }
+
+            // Add loading state
+            button.classList.add('loading');
+            button.textContent = '';
+        });
+
+        // Remove loading state if form submission fails
+        window.addEventListener('pageshow', function() {
+            const button = document.querySelector('.forgot-btn');
+            if (button.classList.contains('loading')) {
+                button.classList.remove('loading');
+                button.textContent = 'Reset Password';
+            }
+        });
+    </script>
+</body>
+</html>
