@@ -7,6 +7,8 @@ import secrets
 import re
 import os
 import logging
+from chat import chat_bp, init_chat  # adjust filename if different
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -18,6 +20,8 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
+app.register_blueprint(chat_bp, url_prefix='/chat')
+
 
 # MongoDB connection with error handling
 try:
@@ -32,6 +36,9 @@ try:
     tokens.create_index("expires_at", expireAfterSeconds=0)
     
     logger.info("MongoDB connection established successfully")
+
+    init_chat(db)  # Initialize chat history collection
+    chathistory = db['chathistory']
 except Exception as e:
     logger.error(f"Failed to connect to MongoDB: {e}")
     raise
@@ -223,6 +230,7 @@ def logout():
     if username:
         logger.info(f"User logged out: {username}")
     return redirect(url_for('login'))
+
 
 @app.errorhandler(404)
 def not_found(error):
