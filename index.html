@@ -19,7 +19,7 @@
             background-color: #f5f5f5;
         }
         
-        #sidebar {
+        .sidebar {
             width: 280px;
             background-color: #2c3e50;
             color: white;
@@ -49,6 +49,13 @@
             font-size: 18px;
             font-weight: bold;
             cursor: pointer;
+        }
+        
+        .user-icon img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
         }
         
         .username {
@@ -99,7 +106,7 @@
             padding: 15px;
         }
         
-        .chat-entry {
+        .history-item {
             padding: 12px;
             margin-bottom: 8px;
             background-color: #34495e;
@@ -108,7 +115,7 @@
             position: relative;
         }
         
-        .chat-entry:hover {
+        .history-item:hover {
             background-color: #3d566e;
         }
         
@@ -133,7 +140,7 @@
             gap: 5px;
         }
         
-        .chat-entry:hover .chat-actions {
+        .history-item:hover .chat-actions {
             display: flex;
         }
         
@@ -150,11 +157,16 @@
             justify-content: center;
         }
         
+        .action-btn img {
+            width: 16px;
+            height: 16px;
+        }
+        
         .action-btn:hover {
             background: rgba(255, 255, 255, 0.3);
         }
         
-        #main {
+        .container {
             flex: 1;
             display: flex;
             flex-direction: column;
@@ -176,9 +188,10 @@
             font-size: 20px;
             cursor: pointer;
             padding: 5px;
+            display: none; /* Hidden by default */
         }
         
-        #chat-output {
+        .chat-container {
             flex: 1;
             padding: 20px;
             border: none;
@@ -219,51 +232,37 @@
             background-color: #2980b9;
         }
         
-        @media (max-width: 768px) {
-            #sidebar {
-                position: absolute;
-                height: 100%;
-                transform: translateX(-100%);
-                z-index: 100;
-            }
-            
-            #sidebar-toggle {
-                display: none;
-            }
-            
-            .overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0,0,0,0.5);
-                z-index: 99;
-                display: none;
-            }
-            
-            #sidebar.active + .overlay {
-                display: block;
-            }
-        }
-        
+        /* Desktop-only toggle button */
         @media (min-width: 769px) {
             #sidebar-toggle {
-                display: block;
+                display: block; /* Show toggle button on desktop */
             }
             
-            #sidebar {
+            .sidebar {
                 position: relative;
                 transform: translateX(0);
             }
             
-            #sidebar.collapsed {
+            .sidebar.collapsed {
                 transform: translateX(-280px);
                 position: absolute;
             }
             
-            #main.expanded {
+            .container.expanded {
                 margin-left: 0;
+            }
+        }
+        
+        /* Mobile view: No toggle button, sidebar always visible */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: relative;
+                width: 280px;
+                transform: translateX(0);
+            }
+            
+            .container {
+                flex: 1;
             }
         }
         
@@ -301,10 +300,12 @@
     </style>
 </head>
 <body>
-    <div id="sidebar">
+    <div class="sidebar">
         <div class="user-profile">
             <div class="dropdown">
-                <div class="user-icon" id="user-icon"></div>
+                <div class="user-icon" id="user-icon">
+                    <img src="/static/user-icon.png" alt="User Icon">
+                </div>
                 <div class="dropdown-content">
                     <a href="/logout">Logout</a>
                 </div>
@@ -318,331 +319,289 @@
         </div>
     </div>
     
-    <div class="overlay" id="overlay"></div>
-    
-    <div id="main">
+    <div class="container">
         <div id="chat-header">
             <button id="sidebar-toggle">☰</button>
             <h2>Chat</h2>
         </div>
         
-        <textarea id="chat-output" readonly>Loading messages...</textarea>
+        <textarea class="chat-container" id="chat-output" readonly>Loading messages...</textarea>
         
         <div id="chat-input-container">
-            <input type="text" id="chat-input" placeholder="Type your message..." disabled>
-            <button id="send-button" disabled>Send</button>
+            <input type="text" id="chat-input" placeholder="Type your message...">
+            <button id="send-button">Send</button>
         </div>
     </div>
 
     <div id="toast" class="toast"></div>
 
     <script>
-        // DOM Elements
-        const sidebar = document.getElementById('sidebar');
-        const sidebarToggle = document.getElementById('sidebar-toggle');
-        const overlay = document.getElementById('overlay');
-        const chatInput = document.getElementById('chat-input');
-        const sendButton = document.getElementById('send-button');
-        const chatOutput = document.getElementById('chat-output');
-        const historyContainer = document.getElementById('history');
-        const userIcon = document.getElementById('user-icon');
-        const usernameDisplay = document.getElementById('username-display');
-        const toast = document.getElementById('toast');
-        const mainContent = document.getElementById('main');
-        
-        // Chat data
-        let messages = [];
-        let currentUser = null;
-        
-        // Initialize
-        document.addEventListener('DOMContentLoaded', async () => {
-            try {
-                // Get current user from session
-                await fetchCurrentUser();
-                
-                // Load messages
-                await loadMessages();
-                
-                // Setup event listeners
-                setupEventListeners();
-                
-                // Check screen size
-                handleResponsiveDesign();
-            } catch (error) {
-                console.error("Initialization error:", error);
-                showToast("Failed to initialize chat");
+const sidebar = document.querySelector('.sidebar');
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const chatInput = document.getElementById('chat-input');
+    const sendButton = document.getElementById('send-button');
+    const chatOutput = document.getElementById('chat-output');
+    const historyContainer = document.getElementById('history');
+    const userIcon = document.getElementById('user-icon');
+    const usernameDisplay = document.getElementById('username-display');
+    const toast = document.getElementById('toast');
+    const mainContent = document.querySelector('.container');
+    
+    let messages = [];
+    let currentUser = null;
+    const API_BASE_URL = ''; // Ensure this is correct; leave empty if same origin
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            await fetchCurrentUser();
+            if (!currentUser?.username) {
+                showToast("No username found. Redirecting to login...");
+                setTimeout(() => { window.location.href = "/login"; }, 2000);
+                return;
             }
-        });
-        
-        // Fetch current user from session
-        async function fetchCurrentUser() {
+            await loadChatHistory();
+            setupEventListeners();
+            handleResponsiveDesign();
+        } catch (error) {
+            console.error("Initialization error:", error);
+            showToast("Failed to initialize chat. Please try again later.");
+        }
+    });
+
+    async function fetchCurrentUser() {
+        try {
+            console.log("Fetching user from:", `${API_BASE_URL}/api/user`); // Debug log
+            const response = await fetch(`${API_BASE_URL}/api/user`, { 
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+            if (!response.ok) {
+                console.error("Fetch user response status:", response.status, response.statusText);
+                if (response.status === 401) {
+                    showToast("Session expired. Redirecting to login...");
+                    setTimeout(() => { window.location.href = "/login"; }, 2000);
+                    return;
+                }
+                throw new Error(`Failed to fetch user: ${response.statusText}`);
+            }
+            const user = await response.json();
+            console.log("Fetched user:", user); // Debug log
+            currentUser = user;
+            userIcon.textContent = user.username[0].toUpperCase();
+            usernameDisplay.textContent = user.username;
+        } catch (error) {
+            console.error("Error in fetchCurrentUser:", error);
+            throw error; // Re-throw to be caught in the DOMContentLoaded handler
+        }
+    }
+
+        async function loadChatHistory() {
             try {
-                const response = await fetch('/api/user');
+                const response = await fetch(`${API_BASE_URL}/chat/history`, { credentials: 'include' });
                 if (!response.ok) {
                     if (response.status === 401) {
-                        window.location.href = "/login";
+                        showToast("Session expired. Redirecting to login...");
+                        setTimeout(() => { window.location.href = "/login"; }, 2000);
                         return;
                     }
-                    throw new Error('Failed to fetch user');
+                    throw new Error(`Failed to load messages: ${response.statusText}`);
                 }
-                
-                const user = await response.json();
-                currentUser = user;
-                
-                // Update UI
-                userIcon.textContent = user.username[0].toUpperCase();
-                usernameDisplay.textContent = user.username;
-                
-            } catch (error) {
-                console.error("Error fetching user:", error);
-                showToast("Failed to load user data");
-                window.location.href = "/login";
-            }
-        }
-        
-        // Load messages from backend
-        async function loadMessages() {
-            try {
-                const response = await fetch('/chat/history');
-                if (!response.ok) throw new Error('Failed to load messages');
-                
-                const data = await response.json();
-                messages = data;
-                
-                // Enable input
+                messages = await response.json();
                 chatInput.disabled = false;
                 sendButton.disabled = false;
                 chatInput.focus();
-                
-                // Render messages
                 renderMessages();
-                
             } catch (error) {
-                console.error("Error loading messages:", error);
-                showToast("Failed to load messages");
-                chatOutput.value = "Failed to load messages. Please try again.";
+                console.error("Error loading chat history:", error);
+                showToast("Failed to load chat history.");
             }
         }
-        
-        // Render all messages
+
         function renderMessages() {
             renderChatOutput();
             renderSidebar();
         }
-        
-        // Render main chat area
+
         function renderChatOutput() {
             if (messages.length === 0) {
                 chatOutput.value = "No messages yet. Start chatting!";
                 return;
             }
-            
             chatOutput.value = messages.map(msg => 
                 `${currentUser.username} (${new Date(msg.timestamp).toLocaleTimeString()}): ${msg.message}\n` +
-                `Bot: ${msg.bot_response}\n`
+                `Bot: ${msg.bot_response || 'No response yet'}\n`
             ).join('\n\n');
-            
             chatOutput.scrollTop = chatOutput.scrollHeight;
         }
-        
-        // Render sidebar
+
         function renderSidebar() {
             if (messages.length === 0) {
                 historyContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #bdc3c7;">No chat history yet</div>';
                 return;
             }
-            
             historyContainer.innerHTML = '';
-            
             messages.forEach(msg => {
                 const entry = document.createElement('div');
-                entry.className = 'chat-entry';
+                entry.className = 'history-item';
                 entry.dataset.id = msg._id;
-                
                 entry.innerHTML = `
                     <div class="message-preview">${msg.message.substring(0, 30)}${msg.message.length > 30 ? '...' : ''}</div>
                     <div class="timestamp">${new Date(msg.timestamp).toLocaleTimeString()}</div>
                     <div class="chat-actions">
-                        <button class="action-btn edit-btn" title="Edit">✏️</button>
-                        <button class="action-btn delete-btn" title="Delete">🗑️</button>
+                        <button class="action-btn edit-btn" title="Edit">
+                            <img src="./edit.png" alt="Edit Icon">
+                        </button>
+                        <button class="action-btn delete-btn" title="Delete">
+                            <img src="./close.png" alt="Delete Icon">
+                        </button>
                     </div>
                 `;
-                
                 entry.addEventListener('click', (e) => {
-                    if (!e.target.classList.contains('action-btn')) {
+                    if (!e.target.classList.contains('action-btn') && !e.target.closest('.action-btn')) {
                         scrollToMessage(msg._id);
                     }
                 });
-                
                 entry.querySelector('.edit-btn').addEventListener('click', (e) => {
                     e.stopPropagation();
                     editMessage(msg._id);
                 });
-                
                 entry.querySelector('.delete-btn').addEventListener('click', (e) => {
                     e.stopPropagation();
                     deleteMessage(msg._id);
                 });
-                
                 historyContainer.appendChild(entry);
             });
         }
-        
-        // Scroll to specific message
+
         function scrollToMessage(id) {
             const msgIndex = messages.findIndex(m => m._id === id);
             if (msgIndex !== -1) {
                 const msgElements = chatOutput.value.split('\n\n');
-                chatOutput.scrollTop = msgIndex * 50; // Approximate scroll position
+                chatOutput.scrollTop = msgIndex * 50;
             }
         }
-        
-        // Edit message
+
         async function editMessage(id) {
             const msg = messages.find(m => m._id === id);
             if (!msg) return;
-            
             const newText = prompt("Edit your message:", msg.message);
             if (newText !== null && newText.trim() !== '') {
                 try {
-                    const response = await fetch(`/chat/update/${id}`, {
+                    const response = await fetch(`${API_BASE_URL}/chat/update/${id}`, {
                         method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ message: newText.trim() })
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message: newText.trim() }),
+                        credentials: 'include'
                     });
-                    
-                    if (!response.ok) throw new Error('Failed to update message');
-                    
-                    // Update local data
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || `Failed to update message: ${response.statusText}`);
+                    }
                     msg.message = newText.trim();
-                    
-                    // Render updates
                     renderMessages();
                     showToast("Message updated");
-                    
                 } catch (error) {
                     console.error("Error updating message:", error);
-                    showToast("Failed to update message");
+                    showToast(error.message || "Failed to update message");
                 }
             }
         }
-        
-        // Delete message
+
         async function deleteMessage(id) {
             if (confirm("Are you sure you want to delete this message?")) {
                 try {
-                    const response = await fetch(`/chat/delete/${id}`, {
-                        method: 'DELETE'
+                    const response = await fetch(`${API_BASE_URL}/chat/delete/${id}`, {
+                        method: 'DELETE',
+                        credentials: 'include'
                     });
-                    
-                    if (!response.ok) throw new Error('Failed to delete message');
-                    
-                    // Update local data
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || `Failed to delete message: ${response.statusText}`);
+                    }
                     messages = messages.filter(m => m._id !== id);
-                    
-                    // Render updates
                     renderMessages();
                     showToast("Message deleted");
-                    
                 } catch (error) {
                     console.error("Error deleting message:", error);
-                    showToast("Failed to delete message");
+                    showToast(error.message || "Failed to delete message");
                 }
             }
         }
-        
-        // Send new message
+
         async function sendMessage() {
             const message = chatInput.value.trim();
-            if (!message) return;
-            
+            if (!message) {
+                showToast("Message cannot be empty");
+                return;
+            }
             try {
-                // Disable input while sending
                 chatInput.disabled = true;
                 sendButton.disabled = true;
                 sendButton.innerHTML = '<span class="loading"></span>';
-                
-                const response = await fetch('/chat/send', {
+
+                const response = await fetch(`${API_BASE_URL}/chat/send`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ message })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message }),
+                    credentials: 'include'
                 });
-                
-                if (!response.ok) throw new Error('Failed to send message');
-                
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    if (response.status === 401) {
+                        showToast("Session expired. Redirecting to login...");
+                        setTimeout(() => { window.location.href = "/login"; }, 2000);
+                        return;
+                    }
+                    throw new Error(errorData.error || `Failed to send message: ${response.statusText}`);
+                }
+
                 const newMsg = await response.json();
-                
-                // Add to local messages
                 messages.push(newMsg);
-                
-                // Clear input
                 chatInput.value = '';
-                
-                // Render updates
                 renderMessages();
-                showToast("Message sent");
-                
+                showToast("Message sent successfully");
             } catch (error) {
                 console.error("Error sending message:", error);
-                showToast("Failed to send message");
+                showToast(error.message || "Failed to send message");
             } finally {
-                // Re-enable input
                 chatInput.disabled = false;
                 sendButton.disabled = false;
                 sendButton.textContent = 'Send';
                 chatInput.focus();
             }
         }
-        
-        // Handle responsive design
+
         function handleResponsiveDesign() {
             if (window.innerWidth <= 768) {
-                sidebar.classList.remove('active');
-                overlay.style.display = 'none';
-            } else {
                 sidebar.classList.remove('collapsed');
                 mainContent.classList.remove('expanded');
             }
         }
-        
-        // Setup event listeners
+
         function setupEventListeners() {
             sidebarToggle.addEventListener('click', toggleSidebar);
-            
-            overlay.addEventListener('click', () => {
-                sidebar.classList.remove('active');
-                overlay.style.display = 'none';
-            });
-            
             sendButton.addEventListener('click', sendMessage);
             chatInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') sendMessage();
             });
-            
             window.addEventListener('resize', handleResponsiveDesign);
         }
-        
-        // Toggle sidebar
+
         function toggleSidebar() {
+            // Only toggle on desktop
             if (window.innerWidth > 768) {
                 sidebar.classList.toggle('collapsed');
                 mainContent.classList.toggle('expanded');
                 localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
-            } else {
-                sidebar.classList.toggle('active');
-                overlay.style.display = sidebar.classList.contains('active') ? 'block' : 'none';
             }
         }
-        
-        // Show toast notification
+
         function showToast(message, duration = 3000) {
             toast.textContent = message;
             toast.classList.add('show');
-            
             setTimeout(() => {
                 toast.classList.remove('show');
             }, duration);
@@ -650,3 +609,4 @@
     </script>
 </body>
 </html>
+<!-- //https://grok.com/share/c2hhcmQtMg%3D%3D_625b1254-201a-4030-8827-71d2a220a9c2 -->
