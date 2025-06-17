@@ -2,225 +2,651 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Chatbot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Application</title>
     <style>
-        body {
+        * {
+            box-sizing: border-box;
             margin: 0;
-            font-family: Arial, sans-serif;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
             display: flex;
             height: 100vh;
+            overflow: hidden;
+            background-color: #f5f5f5;
         }
-
+        
         #sidebar {
-            width: 250px;
-            background-color: #f4f4f4;
-            border-right: 1px solid #ccc;
-            padding: 10px;
-            overflow-y: auto;
-        }
-
-        #main {
-            flex-grow: 1;
+            width: 280px;
+            background-color: #2c3e50;
+            color: white;
             display: flex;
             flex-direction: column;
-            padding: 10px;
+            transition: transform 0.3s ease;
         }
-
-        #chat-output {
-            flex-grow: 1;
-            width: 100%;
-            resize: none;
-            padding: 10px;
-            margin-bottom: 10px;
+        
+        .user-profile {
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid #34495e;
+            position: relative;
         }
-
-        #chat-input {
-            width: 80%;
-            padding: 8px;
+        
+        .user-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #3498db;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
         }
-
-        #send-button {
-            padding: 8px 16px;
+        
+        .username {
+            font-size: 16px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
         }
-
+        
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background-color: #34495e;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .dropdown-content a {
+            color: white;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+        
+        .dropdown-content a:hover {
+            background-color: #3d566e;
+        }
+        
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        
+        #history {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+        }
+        
         .chat-entry {
-            padding: 5px;
-            border-bottom: 1px solid #ddd;
+            padding: 12px;
+            margin-bottom: 8px;
+            background-color: #34495e;
+            border-radius: 6px;
+            cursor: pointer;
+            position: relative;
         }
-
+        
         .chat-entry:hover {
-            background-color: #eaeaea;
+            background-color: #3d566e;
         }
-
+        
+        .message-preview {
+            font-size: 14px;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
         .timestamp {
-            font-size: 0.8em;
-            color: gray;
+            font-size: 12px;
+            color: #bdc3c7;
         }
-
+        
         .chat-actions {
+            display: none;
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            gap: 5px;
+        }
+        
+        .chat-entry:hover .chat-actions {
+            display: flex;
+        }
+        
+        .action-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        #main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: white;
+        }
+        
+        #chat-header {
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 1px solid #eee;
+            background-color: #f8f9fa;
+        }
+        
+        #sidebar-toggle {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+        }
+        
+        #chat-output {
+            flex: 1;
+            padding: 20px;
+            border: none;
+            resize: none;
+            background-color: #fafafa;
+            line-height: 1.5;
+        }
+        
+        #chat-input-container {
+            padding: 15px 20px;
             display: flex;
             gap: 10px;
-            margin-top: 4px;
+            border-top: 1px solid #eee;
         }
-
-        button.small {
-            font-size: 0.75em;
-            padding: 2px 6px;
+        
+        #chat-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            outline: none;
         }
-
-        #logout-link {
-            margin-top: 10px;
+        
+        #chat-input:focus {
+            border-color: #3498db;
+        }
+        
+        #send-button {
+            padding: 0 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        
+        #send-button:hover {
+            background-color: #2980b9;
+        }
+        
+        @media (max-width: 768px) {
+            #sidebar {
+                position: absolute;
+                height: 100%;
+                transform: translateX(-100%);
+                z-index: 100;
+            }
+            
+            #sidebar-toggle {
+                display: none;
+            }
+            
+            .overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.5);
+                z-index: 99;
+                display: none;
+            }
+            
+            #sidebar.active + .overlay {
+                display: block;
+            }
+        }
+        
+        @media (min-width: 769px) {
+            #sidebar-toggle {
+                display: block;
+            }
+            
+            #sidebar {
+                position: relative;
+                transform: translateX(0);
+            }
+            
+            #sidebar.collapsed {
+                transform: translateX(-280px);
+                position: absolute;
+            }
+            
+            #main.expanded {
+                margin-left: 0;
+            }
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #333;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+        
+        .toast.show {
+            opacity: 1;
+        }
+        
+        .loading {
             display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
     <div id="sidebar">
-        <h3>Chat History</h3>
-        <div id="history"></div>
-        <a id="logout-link" href="{{ url_for('logout') }}">Logout</a>
+        <div class="user-profile">
+            <div class="dropdown">
+                <div class="user-icon" id="user-icon"></div>
+                <div class="dropdown-content">
+                    <a href="/logout">Logout</a>
+                </div>
+            </div>
+            <div class="username" id="username-display"></div>
+        </div>
+        <div id="history">
+            <div style="padding: 20px; text-align: center; color: #bdc3c7;">
+                Loading chat history...
+            </div>
+        </div>
     </div>
-
+    
+    <div class="overlay" id="overlay"></div>
+    
     <div id="main">
-        <h2>Welcome, {{ username }}!</h2>
-        <textarea id="chat-output" readonly></textarea>
-        <div>
-            <input type="text" id="chat-input" placeholder="Type your message..." />
-            <button id="send-button" onclick="sendMessage()">Send</button>
+        <div id="chat-header">
+            <button id="sidebar-toggle">☰</button>
+            <h2>Chat</h2>
+        </div>
+        
+        <textarea id="chat-output" readonly>Loading messages...</textarea>
+        
+        <div id="chat-input-container">
+            <input type="text" id="chat-input" placeholder="Type your message..." disabled>
+            <button id="send-button" disabled>Send</button>
         </div>
     </div>
 
-<script>
-    let chatHistory = [];
+    <div id="toast" class="toast"></div>
 
-   async function loadChatHistory() {
-    try {
-        const response = await fetch('/chat/history');
-        if (!response.ok) {
-            throw new Error(`Server error: ${response.status}`);
-        }
-        const data = await response.json();
-        chatHistory = data.map(msg => ({
-            id: msg._id,  // Now using string ID
-            user: msg.message,
-            bot: msg.bot_response,
-            time: new Date(msg.timestamp).toLocaleString()
-        }));
-        renderChatOutput();
-        renderSidebar();
-    } catch (error) {
-        console.error("Failed to load chat history:", error);
-        document.getElementById('chat-output').value = "Error loading chat history. Please try again later.";
-    }
-}
-
-    async function sendMessage() {
-        const inputBox = document.getElementById('chat-input');
-        const message = inputBox.value.trim();
-        if (!message) return;
-
-        try {
-            const response = await fetch('/chat/send', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message })
-            });
-
-            if (response.ok) {
-                inputBox.value = '';
-                await loadChatHistory();  // Refresh after sending
-            } else {
-                console.error("Failed to send message");
+    <script>
+        // DOM Elements
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const overlay = document.getElementById('overlay');
+        const chatInput = document.getElementById('chat-input');
+        const sendButton = document.getElementById('send-button');
+        const chatOutput = document.getElementById('chat-output');
+        const historyContainer = document.getElementById('history');
+        const userIcon = document.getElementById('user-icon');
+        const usernameDisplay = document.getElementById('username-display');
+        const toast = document.getElementById('toast');
+        const mainContent = document.getElementById('main');
+        
+        // Chat data
+        let messages = [];
+        let currentUser = null;
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Get current user from session
+                await fetchCurrentUser();
+                
+                // Load messages
+                await loadMessages();
+                
+                // Setup event listeners
+                setupEventListeners();
+                
+                // Check screen size
+                handleResponsiveDesign();
+            } catch (error) {
+                console.error("Initialization error:", error);
+                showToast("Failed to initialize chat");
             }
-        } catch (error) {
-            console.error("Error:", error);
-        }
-    }
-
-    function renderChatOutput() {
-        const outputBox = document.getElementById('chat-output');
-        outputBox.value = chatHistory.map(e => `You: ${e.user}\nBot: ${e.bot}\n`).join("\n\n");
-    }
-
-    function renderSidebar() {
-        const sidebar = document.getElementById('history');
-        sidebar.innerHTML = '';
-
-        chatHistory.forEach((entry, index) => {
-            const div = document.createElement('div');
-            div.className = 'chat-entry';
-
-            const content = document.createElement('div');
-            content.textContent = entry.user;
-
-            const time = document.createElement('div');
-            time.className = 'timestamp';
-            time.textContent = entry.time;
-
-            const actions = document.createElement('div');
-            actions.className = 'chat-actions';
-
-            const editBtn = document.createElement('button');
-            editBtn.className = 'small';
-            editBtn.textContent = 'Edit';
-            editBtn.onclick = () => {
-                const newMsg = prompt("Edit your message:", entry.user);
-                if (newMsg !== null && newMsg.trim() !== '') {
-                    updateMessage(entry.id, newMsg.trim());
-                }
-            };
-
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'small';
-            deleteBtn.textContent = 'Delete';
-            deleteBtn.onclick = () => {
-                deleteMessage(entry.id);
-            };
-
-            actions.appendChild(editBtn);
-            actions.appendChild(deleteBtn);
-
-            div.appendChild(content);
-            div.appendChild(time);
-            div.appendChild(actions);
-            sidebar.appendChild(div);
         });
-    }
-
-    async function deleteMessage(id) {
-        try {
-            const response = await fetch(`/chat/delete/${id}`, {
-                method: 'DELETE'
-            });
-            if (response.ok) {
-                await loadChatHistory(); // Reload after deletion
-            } else {
-                console.error("Failed to delete message");
+        
+        // Fetch current user from session
+        async function fetchCurrentUser() {
+            try {
+                const response = await fetch('/api/user');
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = "/login";
+                        return;
+                    }
+                    throw new Error('Failed to fetch user');
+                }
+                
+                const user = await response.json();
+                currentUser = user;
+                
+                // Update UI
+                userIcon.textContent = user.username[0].toUpperCase();
+                usernameDisplay.textContent = user.username;
+                
+            } catch (error) {
+                console.error("Error fetching user:", error);
+                showToast("Failed to load user data");
+                window.location.href = "/login";
             }
-        } catch (error) {
-            console.error("Error:", error);
         }
-    }
-
-    async function updateMessage(id, newMessage) {
-        try {
-            const response = await fetch(`/chat/update/${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: newMessage })
-            });
-            if (response.ok) {
-                await loadChatHistory(); // Reload after update
-            } else {
-                console.error("Failed to update message");
+        
+        // Load messages from backend
+        async function loadMessages() {
+            try {
+                const response = await fetch('/chat/history');
+                if (!response.ok) throw new Error('Failed to load messages');
+                
+                const data = await response.json();
+                messages = data;
+                
+                // Enable input
+                chatInput.disabled = false;
+                sendButton.disabled = false;
+                chatInput.focus();
+                
+                // Render messages
+                renderMessages();
+                
+            } catch (error) {
+                console.error("Error loading messages:", error);
+                showToast("Failed to load messages");
+                chatOutput.value = "Failed to load messages. Please try again.";
             }
-        } catch (error) {
-            console.error("Error:", error);
         }
-    }
-
-    window.onload = loadChatHistory;
-</script>
-
+        
+        // Render all messages
+        function renderMessages() {
+            renderChatOutput();
+            renderSidebar();
+        }
+        
+        // Render main chat area
+        function renderChatOutput() {
+            if (messages.length === 0) {
+                chatOutput.value = "No messages yet. Start chatting!";
+                return;
+            }
+            
+            chatOutput.value = messages.map(msg => 
+                `${currentUser.username} (${new Date(msg.timestamp).toLocaleTimeString()}): ${msg.message}\n` +
+                `Bot: ${msg.bot_response}\n`
+            ).join('\n\n');
+            
+            chatOutput.scrollTop = chatOutput.scrollHeight;
+        }
+        
+        // Render sidebar
+        function renderSidebar() {
+            if (messages.length === 0) {
+                historyContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #bdc3c7;">No chat history yet</div>';
+                return;
+            }
+            
+            historyContainer.innerHTML = '';
+            
+            messages.forEach(msg => {
+                const entry = document.createElement('div');
+                entry.className = 'chat-entry';
+                entry.dataset.id = msg._id;
+                
+                entry.innerHTML = `
+                    <div class="message-preview">${msg.message.substring(0, 30)}${msg.message.length > 30 ? '...' : ''}</div>
+                    <div class="timestamp">${new Date(msg.timestamp).toLocaleTimeString()}</div>
+                    <div class="chat-actions">
+                        <button class="action-btn edit-btn" title="Edit">✏️</button>
+                        <button class="action-btn delete-btn" title="Delete">🗑️</button>
+                    </div>
+                `;
+                
+                entry.addEventListener('click', (e) => {
+                    if (!e.target.classList.contains('action-btn')) {
+                        scrollToMessage(msg._id);
+                    }
+                });
+                
+                entry.querySelector('.edit-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    editMessage(msg._id);
+                });
+                
+                entry.querySelector('.delete-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deleteMessage(msg._id);
+                });
+                
+                historyContainer.appendChild(entry);
+            });
+        }
+        
+        // Scroll to specific message
+        function scrollToMessage(id) {
+            const msgIndex = messages.findIndex(m => m._id === id);
+            if (msgIndex !== -1) {
+                const msgElements = chatOutput.value.split('\n\n');
+                chatOutput.scrollTop = msgIndex * 50; // Approximate scroll position
+            }
+        }
+        
+        // Edit message
+        async function editMessage(id) {
+            const msg = messages.find(m => m._id === id);
+            if (!msg) return;
+            
+            const newText = prompt("Edit your message:", msg.message);
+            if (newText !== null && newText.trim() !== '') {
+                try {
+                    const response = await fetch(`/chat/update/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ message: newText.trim() })
+                    });
+                    
+                    if (!response.ok) throw new Error('Failed to update message');
+                    
+                    // Update local data
+                    msg.message = newText.trim();
+                    
+                    // Render updates
+                    renderMessages();
+                    showToast("Message updated");
+                    
+                } catch (error) {
+                    console.error("Error updating message:", error);
+                    showToast("Failed to update message");
+                }
+            }
+        }
+        
+        // Delete message
+        async function deleteMessage(id) {
+            if (confirm("Are you sure you want to delete this message?")) {
+                try {
+                    const response = await fetch(`/chat/delete/${id}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (!response.ok) throw new Error('Failed to delete message');
+                    
+                    // Update local data
+                    messages = messages.filter(m => m._id !== id);
+                    
+                    // Render updates
+                    renderMessages();
+                    showToast("Message deleted");
+                    
+                } catch (error) {
+                    console.error("Error deleting message:", error);
+                    showToast("Failed to delete message");
+                }
+            }
+        }
+        
+        // Send new message
+        async function sendMessage() {
+            const message = chatInput.value.trim();
+            if (!message) return;
+            
+            try {
+                // Disable input while sending
+                chatInput.disabled = true;
+                sendButton.disabled = true;
+                sendButton.innerHTML = '<span class="loading"></span>';
+                
+                const response = await fetch('/chat/send', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message })
+                });
+                
+                if (!response.ok) throw new Error('Failed to send message');
+                
+                const newMsg = await response.json();
+                
+                // Add to local messages
+                messages.push(newMsg);
+                
+                // Clear input
+                chatInput.value = '';
+                
+                // Render updates
+                renderMessages();
+                showToast("Message sent");
+                
+            } catch (error) {
+                console.error("Error sending message:", error);
+                showToast("Failed to send message");
+            } finally {
+                // Re-enable input
+                chatInput.disabled = false;
+                sendButton.disabled = false;
+                sendButton.textContent = 'Send';
+                chatInput.focus();
+            }
+        }
+        
+        // Handle responsive design
+        function handleResponsiveDesign() {
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('active');
+                overlay.style.display = 'none';
+            } else {
+                sidebar.classList.remove('collapsed');
+                mainContent.classList.remove('expanded');
+            }
+        }
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            sidebarToggle.addEventListener('click', toggleSidebar);
+            
+            overlay.addEventListener('click', () => {
+                sidebar.classList.remove('active');
+                overlay.style.display = 'none';
+            });
+            
+            sendButton.addEventListener('click', sendMessage);
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') sendMessage();
+            });
+            
+            window.addEventListener('resize', handleResponsiveDesign);
+        }
+        
+        // Toggle sidebar
+        function toggleSidebar() {
+            if (window.innerWidth > 768) {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+            } else {
+                sidebar.classList.toggle('active');
+                overlay.style.display = sidebar.classList.contains('active') ? 'block' : 'none';
+            }
+        }
+        
+        // Show toast notification
+        function showToast(message, duration = 3000) {
+            toast.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, duration);
+        }
+    </script>
 </body>
 </html>
